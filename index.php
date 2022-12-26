@@ -3,7 +3,6 @@ include_once "vendor/autoload.php";
 use Swoole\Coroutine\Http\Client;
 use function Swoole\Coroutine\run;
 
-
 run(function () {
     $clientTool = new \GuzzleHttp\Client([
         'base_uri'=>'https://k8s-local:6443',
@@ -15,7 +14,7 @@ run(function () {
         'timeout' => 5
     ]);
 
-    $connectionKey = 'Vra6hI9KWjQ5RfcLNYB4DEPgtx32Zi7p';
+    $connectionKey = 'Vra6hI9KWjQ5RfcLNYB4DEPgtx32Zi7p1';
     $client = new Client('127.0.0.1', 9501);
     $client->setHeaders([
         'Host' => 'localhost',
@@ -25,6 +24,10 @@ run(function () {
     if ($ret) {
         echo "开始监听任务\n";
         while(true) {
+            if($client->errCode != 0 && $client->connected && $client->push('PING')){
+                echo "onClose:{$client->errMsg}\n";
+                break;
+            }
             /**
              * @var \Swoole\WebSocket\Frame $message
              */
@@ -49,5 +52,7 @@ run(function () {
             }
             \Swoole\Coroutine::sleep(0.1);
         }
+    }else{
+        echo "连接失败:{$client->errMsg}";
     }
 });
