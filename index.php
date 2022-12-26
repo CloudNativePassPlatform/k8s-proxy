@@ -14,7 +14,7 @@ run(function () {
         'timeout' => 5
     ]);
 
-    $connectionKey = 'Vra6hI9KWjQ5RfcLNYB4DEPgtx32Zi7p1';
+    $connectionKey = 'Vra6hI9KWjQ5RfcLNYB4DEPgtx32Zi7p';
     $client = new Client('127.0.0.1', 9501);
     $client->setHeaders([
         'Host' => 'localhost',
@@ -24,7 +24,7 @@ run(function () {
     if ($ret) {
         echo "开始监听任务\n";
         while(true) {
-            if(!($client->errCode != 0 && $client->connected && $client->push('PING'))){
+            if(!$client->push('PING')){
                 echo "onClose:{$client->errMsg}\n";
                 break;
             }
