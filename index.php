@@ -24,7 +24,7 @@ run(function () {
     if ($ret) {
         echo "开始监听任务\n";
         while(true) {
-            if($client->errCode != 0 && $client->connected && $client->push('PING')){
+            if(!($client->errCode != 0 && $client->connected && $client->push('PING'))){
                 echo "onClose:{$client->errMsg}\n";
                 break;
             }
