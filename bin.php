@@ -8,5 +8,4 @@ $application = new Application();
 
 $application->add(new \Command\WatchProxyCommand());
 
-
 $application->run();

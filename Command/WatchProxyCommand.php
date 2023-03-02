@@ -37,15 +37,41 @@ class WatchProxyCommand extends Command
     protected function connection()
     {
         run(function (){
+            $clientTool = new \GuzzleHttp\Client([
+                'base_uri'=>'https://kubernetes.docker.internal:6443',
+                'verify' => false,
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'Authorization' => 'Bearer ' . file_get_contents('/etc/token'),
+                ],
+                'timeout' => 5
+            ]);
             $query = [
                 'connection_key' => '8RIlcwjdnL3gso5hxrKizGWpXCfNtY2F'
             ];
             $webSocket = new WebSocket('ws://127.0.0.1:9501/?' . http_build_query($query),true);
             $webSocket->onOpen(function(){
                 echo "连接成功\n";
-            })->onMessage(function($result){
-                echo "收到消息\n";
-                dump($result);
+            })->onMessage(function(\Swlib\Saber\WebSocket $webSocket,\Swlib\Saber\WebSocketFrame $result) use($query,$clientTool){
+                $message = unserialize($result->data);
+                echo "执行任务:{$message['method']} {$message['uri']} 消息ID:{$message['MessageId']}\n";
+                try{
+                    $response = $clientTool->request($message['method'],$message['uri'],$message['options']);
+                    $responseMessage = 'SUCCESS';
+                }catch (\GuzzleHttp\Exception\ClientException $clientException){
+                    $response = $clientException->getResponse();
+                    $responseMessage = $clientException->getMessage();
+                }
+                $webSocket->push(serialize([
+                    'MessageId'=>$message['MessageId'],
+                    'connection_key'=>$query['connection_key'],
+                    'response'=>[
+                        'code'=>$response->getStatusCode(),
+                        'headers'=>$response->getHeaders(),
+                        'content'=>$response->getBody()->getContents(),
+                        'message'=>$responseMessage
+                    ]
+                ]));
             })->onClose(function(){
                 echo "连接关闭\n";
             })->connection();

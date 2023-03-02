@@ -29,4 +29,4 @@ COPY . /opt/www
 #RUN composer config -g repo.packagist composer https://mirrors.aliyun.com/composer/
 RUN composer install --no-dev -o > /tmp/null
 
-ENTRYPOINT ["php", "/opt/www/index.php"]
+ENTRYPOINT ["php", "/opt/www/bin.php", "WatchProxy"]

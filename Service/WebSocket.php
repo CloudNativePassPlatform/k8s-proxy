@@ -41,13 +41,14 @@ class WebSocket
      * @var
      */
     protected $closeEvent;
+
     /**
      * 构造方法
      * WebSocket constructor.
      * @param string $uri
      * @param bool $autoReconnection
      */
-    public function __construct(string $uri,bool $autoReconnection=true)
+    public function __construct(string $uri, bool $autoReconnection = true)
     {
         $this->uri = $uri;
         $this->autoReconnection = $autoReconnection;
@@ -67,18 +68,18 @@ class WebSocket
             $this->connection();
         }
         $this->retry = 0;
-        Coroutine::create($this->openEvent,[]);
+        Coroutine::create($this->openEvent, [$this->websocket]);
         while (true) {
             if (!$this->websocket->client->connected) {
-                Coroutine::create($this->closeEvent,[]);
-                if($this->autoReconnection){
+                Coroutine::create($this->closeEvent, [$this->websocket]);
+                if ($this->autoReconnection) {
                     $this->connection();
                 }
                 break;
             }
             $result = $this->websocket->recv();
             if ($result instanceof \Swlib\Saber\WebSocketFrame) {
-                \Swoole\Coroutine::create($this->messageEvent,[$result]);
+                \Swoole\Coroutine::create($this->messageEvent, $this->websocket, $result);
             }
             usleep(50000);
         }
@@ -88,7 +89,7 @@ class WebSocket
      * @param $callback
      * @return $this
      */
-    public function onOpen($callback):self
+    public function onOpen($callback): self
     {
         $this->openEvent = $callback;
         return $this;
@@ -98,7 +99,7 @@ class WebSocket
      * @param $callback
      * @return $this
      */
-    public function onClose($callback):self
+    public function onClose($callback): self
     {
         $this->closeEvent = $callback;
         return $this;
@@ -108,7 +109,7 @@ class WebSocket
      * @param $callback
      * @return $this
      */
-    public function onMessage($callback):self
+    public function onMessage($callback): self
     {
         $this->messageEvent = $callback;
         return $this;
