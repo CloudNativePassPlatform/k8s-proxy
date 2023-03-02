@@ -38,7 +38,7 @@ class WatchProxyCommand extends Command
     {
         run(function (){
             $clientTool = new \GuzzleHttp\Client([
-                'base_uri'=>'https://kubernetes.docker.internal:6443',
+                'base_uri'=>file_get_contents('/etc/base_uri'),
                 'verify' => false,
                 'headers' => [
                     'Content-Type' => 'application/json',

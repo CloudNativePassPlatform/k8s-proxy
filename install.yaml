@@ -1,0 +1,88 @@
+# NameSpace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cnpp-proxy
+---
+# ServiceAccessSecret
+apiVersion: v1
+kind: Secret
+metadata:
+  annotations:
+    kubernetes.io/service-account.name: proxy
+  name: proxy-secret
+  namespace: cnpp-proxy
+type: kubernetes.io/service-account-token
+---
+# ServiceAccount
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: proxy-service-account
+  namespace: cnpp-proxy
+secrets:
+  - name: proxy-secret
+---
+# ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: proxy-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: proxy-service-account
+    namespace: cnpp-proxy
+---
+apiVersion: v1
+data:
+  base_uri: "https://kubernetes:443"
+kind: ConfigMap
+metadata:
+  name: cnpp-config
+  namespace: cnpp-proxy
+---
+# CNPPProxy Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cnpp-deployment
+  namespace: cnpp-proxy
+  labels:
+    app: proxy-deployment
+spec:
+  selector:
+    matchLabels:
+      app: proxy-deployment
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: proxy-deployment
+    spec:
+      volumes:
+        - name: proxy-secret-volume
+          secret:
+            secretName: proxy-secret
+        - name: proxy-config-volume
+          configMap:
+            name: cnpp-config
+      containers:
+        - name: proxy-deployment-container
+          image: registry.cn-hangzhou.aliyuncs.com/cnpp/proxy:20230302163900
+          #          image: nginx:alpine
+          #          command:
+          #            - "sleep"
+          #            - "999999"
+          volumeMounts:
+            - mountPath: /etc/token
+              name: proxy-secret-volume
+              readOnly: true
+              subPath: token
+            - mountPath: /etc/base_uri
+              name: proxy-config-volume
+              readOnly: true
+              subPath: base_uri
