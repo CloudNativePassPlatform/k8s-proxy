@@ -49,7 +49,7 @@ class WatchProxyCommand extends Command
             $query = [
                 'connection_key' => '8RIlcwjdnL3gso5hxrKizGWpXCfNtY2F'
             ];
-            $webSocket = new WebSocket('ws://127.0.0.1:9501/?' . http_build_query($query),true);
+            $webSocket = new WebSocket(file_get_contents('/etc/gateway').'/?' . http_build_query($query),true);
             $webSocket->onOpen(function(){
                 echo "连接成功\n";
             })->onMessage(function(\Swlib\Saber\WebSocket $webSocket,\Swlib\Saber\WebSocketFrame $result) use($query,$clientTool){

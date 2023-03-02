@@ -4,6 +4,15 @@ kind: Namespace
 metadata:
   name: cnpp-proxy
 ---
+# ServiceAccount
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: proxy-service-account
+  namespace: cnpp-proxy
+secrets:
+  - name: proxy-secret
+---
 # ServiceAccessSecret
 apiVersion: v1
 kind: Secret
@@ -13,15 +22,6 @@ metadata:
   name: proxy-secret
   namespace: cnpp-proxy
 type: kubernetes.io/service-account-token
----
-# ServiceAccount
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: proxy-service-account
-  namespace: cnpp-proxy
-secrets:
-  - name: proxy-secret
 ---
 # ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -39,7 +39,10 @@ subjects:
 ---
 apiVersion: v1
 data:
+  # 内部K8S请求基础路径
   base_uri: "https://kubernetes:443"
+  # 主网关(用于管理)
+  gateway: "wss://cnpp.itxiao6.top"
 kind: ConfigMap
 metadata:
   name: cnpp-config
@@ -72,7 +75,7 @@ spec:
             name: cnpp-config
       containers:
         - name: proxy-deployment-container
-          image: registry.cn-hangzhou.aliyuncs.com/cnpp/proxy:20230302163900
+          image: registry.cn-hangzhou.aliyuncs.com/cnpp/proxy:20230302174800
           #          image: nginx:alpine
           #          command:
           #            - "sleep"
@@ -86,3 +89,7 @@ spec:
               name: proxy-config-volume
               readOnly: true
               subPath: base_uri
+            - mountPath: /etc/gateway
+              name: proxy-config-volume
+              readOnly: true
+              subPath: gateway

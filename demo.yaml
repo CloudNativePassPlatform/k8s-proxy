@@ -1,0 +1,9 @@
+# ServiceAccessSecret
+apiVersion: v1
+kind: Secret
+metadata:
+  annotations:
+    kubernetes.io/service-account.name: proxy-service-account
+  name: proxy-secret
+  namespace: cnpp-proxy
+type: kubernetes.io/service-account-token
