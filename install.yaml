@@ -43,6 +43,8 @@ data:
   base_uri: "https://kubernetes:443"
   # 主网关(用于管理)
   gateway: "wss://cnpp.itxiao6.top"
+  # 集群连接Key
+  connectionKey: "8RIlcwjdnL3gso5hxrKizGWpXCfNtY2F"
 kind: ConfigMap
 metadata:
   name: cnpp-config
@@ -75,11 +77,7 @@ spec:
             name: cnpp-config
       containers:
         - name: proxy-deployment-container
-          image: registry.cn-hangzhou.aliyuncs.com/cnpp/proxy:20230302174800
-          #          image: nginx:alpine
-          #          command:
-          #            - "sleep"
-          #            - "999999"
+          image: registry.cn-hangzhou.aliyuncs.com/cnpp/proxy:20230303095800
           volumeMounts:
             - mountPath: /etc/token
               name: proxy-secret-volume
@@ -93,3 +91,7 @@ spec:
               name: proxy-config-volume
               readOnly: true
               subPath: gateway
+            - mountPath: /etc/connectionKey
+              name: proxy-config-volume
+              readOnly: true
+              subPath: connectionKey

@@ -65,6 +65,9 @@ class WebSocket
             $this->retry += 1;
             echo "连接失败，{$this->retry}秒后重试\n";
             sleep($this->retry);
+            if ($this->retry >= 120) {
+                $this->retry = 0;
+            }
             $this->connection();
         }
         $this->retry = 0;

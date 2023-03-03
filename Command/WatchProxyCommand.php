@@ -47,7 +47,7 @@ class WatchProxyCommand extends Command
                 'timeout' => 5
             ]);
             $query = [
-                'connection_key' => '8RIlcwjdnL3gso5hxrKizGWpXCfNtY2F'
+                'connection_key' => file_get_contents('/etc/connectionKey')
             ];
             $webSocket = new WebSocket(file_get_contents('/etc/gateway').'/?' . http_build_query($query),true);
             $webSocket->onOpen(function(){
