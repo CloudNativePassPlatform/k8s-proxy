@@ -51,7 +51,7 @@ class WatchProxyCommand extends Command
             ];
             $webSocket = new WebSocket(file_get_contents('/etc/gateway').'/?' . http_build_query($query),true);
             $webSocket->onOpen(function(){
-                echo "连接成功\n";
+                echo "INFO ".date('Y-m-d H:i:s')." 连接成功\n";
             })->onMessage(function(\Swlib\Saber\WebSocket $webSocket,\Swlib\Saber\WebSocketFrame $result) use($query,$clientTool){
                 $message = unserialize($result->data);
                 echo "执行任务:{$message['method']} {$message['uri']} 消息ID:{$message['MessageId']}\n";
@@ -73,7 +73,10 @@ class WatchProxyCommand extends Command
                     ]
                 ]));
             })->onClose(function(){
-                echo "连接关闭\n";
+                echo "INFO ".date('Y-m-d H:i:s')." 连接关闭\n";
+            })->onPing(function(\Swlib\Saber\WebSocket $webSocket){
+                $webSocket->push('PING');
+                echo "INFO ".date('Y-m-d H:i:s')." PING SUCCESS\n";
             })->connection();
         });
     }
