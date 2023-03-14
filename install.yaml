@@ -77,7 +77,7 @@ spec:
             name: cnpp-config
       containers:
         - name: proxy-deployment-container
-          image: registry.cn-hangzhou.aliyuncs.com/cnpp/proxy:20230303095800
+          image: registry.cn-hangzhou.aliyuncs.com/cnpp/proxy:20230304114100
           volumeMounts:
             - mountPath: /etc/token
               name: proxy-secret-volume
