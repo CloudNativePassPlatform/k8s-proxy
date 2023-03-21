@@ -172,7 +172,7 @@ class WatchProxyCommand extends Command
                             ])->setConnectionKey($this->config['proxy-connection-key'])->toString());
                             break;
                         case $message->getTaskType() == 'input-terminal':
-                             $this->logger->info(date('Y-m-d H:i:s').',终端输入:'."\x00".base64_decode($message->getBody()['content']));
+//                             $this->logger->info(date('Y-m-d H:i:s').',终端输入:'."\x00".base64_decode($message->getBody()['content']));
                             $this->terminalConnection[$message->getMessageId()]->push("\x00" . base64_decode($message->getBody()['content']));
                             break;
                         case $message->getTaskType() == 'close-terminal':
@@ -218,28 +218,12 @@ class WatchProxyCommand extends Command
                              * 打印日志
                              */
                             $this->logger->info(date('Y-m-d H:i:s') . ",连接成功:{$message->getMessageId()}");
-                            /**
-                             * 监听消息
-                             */
+
                             Coroutine::create(function () use ($message) {
                                 while (true) {
-                                    $terminalMessage = $this->terminalConnection[$message->getMessageId()]->recv(1);
-                                    if (!($terminalMessage instanceof \Swoole\WebSocket\Frame)) {
-                                        continue;
-                                    }
-                                     $this->logger->info(date('Y-m-d H:i:s').',终端反馈:'.$terminalMessage->data);
-                                    // 通知CNPP服务端
-                                    $this->proxyClient->push((new ResultMessage())->setType('terminal-result')->setBody([
-                                        'content' => base64_encode($terminalMessage->data)
-                                    ])->setConnectionKey($this->config['proxy-connection-key'])->setMessageId($message->getMessageId())->toString());
-                                }
-                            });
-                            /**
-                             * 检查链接状态
-                             */
-                            Coroutine::create(function () use ($message) {
-                                while (true) {
-                                    usleep(50000);
+                                    /**
+                                     * 监听连接状态
+                                     */
                                     if (!$this->terminalConnection[$message->getMessageId()]->connected) {
                                         unset($this->terminalConnection[$message->getMessageId()]);
                                         // 通知服务端 断开连接
@@ -251,6 +235,18 @@ class WatchProxyCommand extends Command
                                         toString());
                                         break;
                                     }
+                                    /**
+                                     * 监听消息
+                                     */
+                                    $terminalMessage = $this->terminalConnection[$message->getMessageId()]->recv(1);
+                                    if (!($terminalMessage instanceof \Swoole\WebSocket\Frame)) {
+                                        continue;
+                                    }
+//                                     $this->logger->info(date('Y-m-d H:i:s').',终端反馈:'.$terminalMessage->data);
+                                    // 通知CNPP服务端
+                                    $this->proxyClient->push((new ResultMessage())->setType('terminal-result')->setBody([
+                                        'content' => base64_encode($terminalMessage->data)
+                                    ])->setConnectionKey($this->config['proxy-connection-key'])->setMessageId($message->getMessageId())->toString());
                                 }
                             });
                             break;
