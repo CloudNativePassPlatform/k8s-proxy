@@ -42,7 +42,7 @@ data:
   # 内部K8S请求基础路径
   base_uri: "https://kubernetes:443"
   # 主网关(用于管理)
-  gateway: "wss://cnpp.itxiao6.top"
+  gateway: "wss://task.itxiao6.top"
   # 集群连接Key
   connectionKey: "8RIlcwjdnL3gso5hxrKizGWpXCfNtY2F"
 kind: ConfigMap
@@ -77,7 +77,7 @@ spec:
             name: cnpp-config
       containers:
         - name: proxy-deployment-container
-          image: registry.cn-hangzhou.aliyuncs.com/cnpp/proxy:20230304114100
+          image: registry.cn-hangzhou.aliyuncs.com/cnpp/proxy:20230321152000
           volumeMounts:
             - mountPath: /etc/token
               name: proxy-secret-volume
