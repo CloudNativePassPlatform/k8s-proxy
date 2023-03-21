@@ -42,7 +42,7 @@ data:
   # 内部K8S请求基础路径
   base_uri: "https://kubernetes:443"
   # 主网关(用于管理)
-  gateway: "wss://cnpp.itxiao6.top"
+  gateway: "wss://task.itxiao6.top"
   # 集群连接Key
   connectionKey: "8RIlcwjdnL3gso5hxrKizGWpXCfNtY2F"
 kind: ConfigMap
