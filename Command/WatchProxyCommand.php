@@ -140,7 +140,6 @@ class WatchProxyCommand extends Command
                      * 监听状态
                      */
                     if (!$this->proxyClient->connected) {
-                        echo "连接关闭\n";
                         $this->logger->error(date('Y-m-d H:i:s') . ",连接关闭");
                         $this->connection();
                     }
