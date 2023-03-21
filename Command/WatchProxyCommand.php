@@ -4,6 +4,7 @@
 namespace Command;
 
 
+use GuzzleHttp\Psr7\Uri;
 use Service\ResultMessage;
 use Service\TaskMessage;
 use Swoole\Coroutine;
@@ -31,14 +32,14 @@ class WatchProxyCommand extends Command
      * @var array
      */
     protected array $config = [
-        'proxy-scheme' => 'http',
-        'proxy-host' => '127.0.0.1',
-        'proxy-port' => 9502,
-        'proxy-connection-key' => 'jMmHeC4ARvdsOlhF158Ip2qaozY3UQxS',
+        'proxy-scheme' => 'wss',
+        'proxy-host' => 'tash.itxiao6.top',
+        'proxy-port' => 443,
+        'proxy-connection-key' => '',
         'local-kube-host' => 'kubernetes.docker.internal',
         'local-kube-scheme' => 'https',
         'local-kube-port' => 6443,
-        'local-kube-token' => 'eyJhbGciOiJSUzI1NiIsImtpZCI6IlNTbDd0QklIVnhuenNoSWxjaGlncGUwVVBjUDlZT1JPZlRpTmlpeEVORkkifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJjbnBwLXByb3h5Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6InByb3h5LXNlY3JldCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJwcm94eS1zZXJ2aWNlLWFjY291bnQiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI5N2MxM2M4Yi1kOTJiLTRjZGUtODFhOC1kMTgxYmUwMGIxYTMiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6Y25wcC1wcm94eTpwcm94eS1zZXJ2aWNlLWFjY291bnQifQ.VB0_uhAZieRs0pNOh_JG6uZR2ArBjnpVITrOzvIT1jXKIEVi5JoVQlSyK-iAxGbXJRevnjKTiNEzOAhSwuOqGoyAGJXMzkDnK3WA1wFFmWrlw8HpznJwsL43ZFNMS8DNTeAOq6kVJJ-lh1RFeg__VvJfDfxr12lXxjWZn0Uh74LMD-zWLg2UPIqu6ttqmqs8e4u1w3kubp7wFLLjw74HFYU1zFBrIA5uXziDKaCb1qafg4rNCWo12rj2_EIteakOHCiLAL3fr5SLI2Qt7yrv-5s8M_fvuUuXzVF6TWHKJf60t86hISreMYGRnne-hynpJL223SXlcXNj1TjqVBPlYg',
+        'local-kube-token' => '',
     ];
     /**
      * 重试次数
@@ -63,6 +64,28 @@ class WatchProxyCommand extends Command
 
     public function __construct()
     {
+        /**
+         * ConnectionKey
+         */
+        $this->config['proxy-connection-key'] = file_get_contents('/etc/connectionKey');
+        /**
+         * WebSocket Server
+         */
+        $socket = new Uri(file_get_contents('/etc/gateway'));
+        $this->config['proxy-scheme'] = $socket->getScheme();
+        $this->config['proxy-host'] = $socket->getHost();
+        $this->config['proxy-port'] = ($socket->getPort()==null&&$socket->getScheme()=='wss')?443:($socket->getPort()==null?80:$socket->getPort());
+        /**
+         * 本地KubeServer
+         */
+        $base_uri = new Uri(file_get_contents('/etc/base_uri'));
+        $this->config['local-kube-host'] = $base_uri->getHost();
+        $this->config['local-kube-port'] = $base_uri->getPort();
+        $this->config['local-kube-scheme'] = $base_uri->getScheme();
+        /**
+         * Token授权
+         */
+        $this->config['local-kube-token'] = file_get_contents('/etc/token');
         parent::__construct('WatchProxy');
         $this->setDescription("启动代理进程");
     }
@@ -101,7 +124,7 @@ class WatchProxyCommand extends Command
         /**
          * 连接代理服务
          */
-        $this->proxyClient = new Client($this->config['proxy-host'], $this->config['proxy-port']);
+        $this->proxyClient = new Client($this->config['proxy-host'], $this->config['proxy-port'],$this->config['proxy-scheme'] == 'wss');
         try {
             /**
              * 升级协议
