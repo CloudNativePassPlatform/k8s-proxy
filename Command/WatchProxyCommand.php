@@ -134,11 +134,19 @@ class WatchProxyCommand extends Command
              * 发起连接
              */
             $this->connection();
-            /**
-             * 监听消息
-             */
             Coroutine::create(function () {
                 while (true) {
+                    /**
+                     * 监听状态
+                     */
+                    if (!$this->proxyClient->connected) {
+                        echo "连接关闭\n";
+                        $this->logger->error(date('Y-m-d H:i:s') . ",连接关闭");
+                        $this->connection();
+                    }
+                    /**
+                     * 监听消息
+                     */
                     $message = $this->proxyClient->recv();
                     if (!($message instanceof \Swoole\WebSocket\Frame)) {
                         continue;
@@ -165,7 +173,7 @@ class WatchProxyCommand extends Command
                             ])->setConnectionKey($this->config['proxy-connection-key'])->toString());
                             break;
                         case $message->getTaskType() == 'input-terminal':
-                            // $this->logger->info(date('Y-m-d H:i:s').',终端输入:'."\x00".base64_decode($message->getBody()['content']));
+                             $this->logger->info(date('Y-m-d H:i:s').',终端输入:'."\x00".base64_decode($message->getBody()['content']));
                             $this->terminalConnection[$message->getMessageId()]->push("\x00" . base64_decode($message->getBody()['content']));
                             break;
                         case $message->getTaskType() == 'close-terminal':
@@ -220,7 +228,7 @@ class WatchProxyCommand extends Command
                                     if (!($terminalMessage instanceof \Swoole\WebSocket\Frame)) {
                                         continue;
                                     }
-                                    // $this->logger->info(date('Y-m-d H:i:s').',终端反馈:'.$terminalMessage->data);
+                                     $this->logger->info(date('Y-m-d H:i:s').',终端反馈:'.$terminalMessage->data);
                                     // 通知CNPP服务端
                                     $this->proxyClient->push((new ResultMessage())->setType('terminal-result')->setBody([
                                         'content' => base64_encode($terminalMessage->data)
@@ -250,19 +258,6 @@ class WatchProxyCommand extends Command
                         default:
                             $this->logger->error(date('Y-m-d H:i:s') . ",任务消息错误:{$message->getTaskType()}");
                             break;
-                    }
-                }
-            });
-            /**
-             * 监听状态
-             */
-            Coroutine::create(function () {
-                while (true) {
-                    usleep(500000);
-                    if (!$this->proxyClient->connected) {
-                        echo "连接关闭\n";
-                        $this->logger->error(date('Y-m-d H:i:s') . ",连接关闭");
-                        $this->connection();
                     }
                 }
             });
