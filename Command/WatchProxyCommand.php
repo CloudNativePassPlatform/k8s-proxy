@@ -210,10 +210,22 @@ class WatchProxyCommand extends Command
                              * 拼接链接
                              */
                             $uri = "/api/v1/namespaces/{$message->getBody()['namespace']}/pods/{$message->getBody()['pods']}/exec?" . http_build_query($query);
-                            /**
-                             * 升级连接
-                             */
-                            $this->checkRet($this->terminalConnection[$message->getMessageId()]->upgrade($uri), $this->terminalConnection[$message->getMessageId()]);
+                            try{
+                                /**
+                                 * 升级连接
+                                 */
+                                $this->checkRet($this->terminalConnection[$message->getMessageId()]->upgrade($uri), $this->terminalConnection[$message->getMessageId()]);
+                            }catch (\Throwable $throwable){
+                                unset($this->terminalConnection[$message->getMessageId()]);
+                                // 通知服务端 断开连接
+                                $this->proxyClient->push((new ResultMessage())->
+                                setType('terminal-close')->
+                                setBody([])->
+                                setConnectionKey($this->config['proxy-connection-key'])->
+                                setMessageId($message->getMessageId())->
+                                toString());
+                                break;
+                            }
                             /**
                              * 打印日志
                              */
